@@ -92,8 +92,8 @@ export default class BEM {
         const bem = new BEM(this.block(), name);
         let index = 0;
         args.forEach((arg) => {
-            if(Array.isArray(arg)) {
-                bem.under(arg[0], arg[1], arg[2]);
+            if(Array.isArray(arg) && arg.length > 1 && arg[0] === 'under') {
+                bem.under(arg[1], arg[2], arg[3]);
             } else {
                 if(index === 0) {
                     bem.add(arg);
