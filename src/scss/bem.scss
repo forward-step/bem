@@ -1,0 +1,116 @@
+$namespace: '';
+$element-separator: '__';
+$modifier-separator: '--';
+$state-prefix: 'is-';
+
+/* BEM
+ -------------------------- */
+@mixin b($block) {
+    // $B: $namespace + '-' + $block !global;
+    $B: if($namespace == '', $block, $namespace + '-' + $block) !global;
+    .#{$B} {
+        @content;
+    }
+}
+@mixin e($element) {
+    $E: $element !global;
+    $selector: &;
+
+    // 获取当前的选择器
+    $currentSelector: '';
+    @each $unit in $element {
+        $currentSelector: #{$currentSelector + '.' + $B + $element-separator + $unit + ','};
+    }
+
+    @if hitAllSpecialNestRule($selector) {
+        @at-root {
+            #{$selector} {
+                #{$currentSelector} {
+                    @content;
+                }
+            }
+        }
+    } @else {
+        @at-root {
+            #{$currentSelector} {
+                @content;
+            }
+        }
+    }
+}
+@mixin m($modifier) {
+    $selector: &;
+    // 获取当前的选择器
+    $currentSelector: '';
+    @each $unit in $modifier {
+        $currentSelector: #{$currentSelector + & + $modifier-separator + $unit + ','};
+    }
+
+    @at-root {
+        #{$currentSelector} {
+            @content;
+        }
+    }
+}
+@mixin when($state) {
+    @at-root {
+        &.#{$state-prefix + $state} {
+            @content;
+        }
+    }
+}
+
+/* BEM Support Function
+ -------------------------- */
+@function selectorToString($selector) {
+    $selector: inspect($selector);
+    $selector: str-slice($selector, 2, -2);
+    @return $selector;
+}
+
+/*
+* @description 是否包含描述符
+* @return {boolean}
+*/
+@function containsModifier($selector) {
+    $selector: selectorToString($selector);
+
+    @if str-index($selector, $modifier-separator) {
+        @return true;
+    } @else {
+        @return false;
+    }
+}
+
+/*
+* @description 是否包含when标志，既是否包含状态描述.is
+* @return {boolean}
+*/
+@function containWhenFlag($selector) {
+    $selector: selectorToString($selector);
+
+    @if str-index($selector, '.' + $state-prefix) {
+        @return true;
+    } @else {
+        @return false;
+    }
+}
+
+/*
+* @description 是否包含伪类
+* @return {boolean}
+*/
+@function containPseudoClass($selector) {
+    $selector: selectorToString($selector);
+
+    @if str-index($selector, ':') {
+        @return true;
+    } @else {
+        @return false;
+    }
+}
+
+@function hitAllSpecialNestRule($selector) {
+    @return containsModifier($selector) or containWhenFlag($selector) or
+        containPseudoClass($selector);
+}

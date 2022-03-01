@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>BEM使用案例-按钮</title>
+        <style>
+            .demo {
+                display: inline-block;
+                width: 64px;
+                height: 34px;
+                border: 1px solid gray;
+            }
+        </style>
+    </head>
+    <body>
+        <button id="demo">按钮</button>
+        <div>
+            block: <input type="checkbox" onchange="handleBlockChnage()">
+        </div>
+        <h1>className:</h1>
+        <p id="clsname"></p>
+        <h1>cssText</h1>
+        <p id="cssText"></p>
+        <script src="../../dist/bem.umd.js"></script>
+        <script>
+            let block = false;
+            const bem = new BEM.default('el-button');
+
+            function handleBlockChnage() {
+                block = !block;
+                mounted();
+            }
+            function mounted() {
+                bem.destory();
+                bem.add({
+                    block,
+                }).commonCss({
+                    display: 'inline-block',
+                    width: '64px',
+                    height: '34px',
+                    border: '1px solid gray',
+                    background: 'white',
+                    'border-radius': '4px',
+                    '&:hover': {
+                        'border-color': 'red',
+                    },
+                    '&--block': {
+                        display: 'block',
+                        width: '100%',
+                    }
+                }).css({
+                    '&--block': {
+                        'background': 'red',
+                        '&:hover': {
+                            'background': 'green',
+                        }
+                    }
+                })
+                document.getElementById("demo").className = bem.toString();
+                document.getElementById("clsname").innerText = bem.toString();
+                document.getElementById("cssText").innerText = bem.cssText;
+            }
+            mounted();
+        </script>
+    </body>
+</html>

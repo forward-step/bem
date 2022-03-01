@@ -1,0 +1,18 @@
+:root {
+    /* color
+    -------------------------- */
+    --color-white: #FFFFFF;
+    --color-black: #000000;
+    --color-primary: #2096f2;
+    --color-success: #4AC683;
+    --color-warning: #F9A823;
+    --color-danger: #F64D49;
+    --color-info: #7367F0;
+    /* border-radius
+    -------------------------- */
+    --border-radius-base: 4px; // 大圆角
+    --border-radius-small: 2px; // 小圆角
+    --border-radius-circle: 100%; // 圆形
+    --border-radius-zero: 0; // 方形
+    --border-radius-capsule: 30px; // 胶囊
+}
