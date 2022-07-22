@@ -34,16 +34,19 @@ export default class BEM {
     //#endregion
 
     //#region 数据结构
+    private originBlockName: string = '';
+    private blockName: string = '';
+    private elementName: string = '';
     private map: IStyleObject = null; // 映射对象
     private clsnames: Set<string> = new Set(); // 追加的classname
     private modifiers: Set<string> = new Set(); // 管理的描述符
     //#endregion
 
-    constructor(
-        private blockName: string, 
-        private elementName: string = '', 
-    ) {
-        this.block(this.blockName);
+    constructor(blockName: string, elementName: string = '') {
+        if(!blockName) throw new Error('block name is not null in bem');
+        this.originBlockName = blockName;
+        this.blockName = `${BEM.namespace}${blockName}`;
+        this.elementName = elementName;
     }
     [Symbol.toStringTag]() {
         return 'BEM';
@@ -56,19 +59,8 @@ export default class BEM {
         return this;
     }
     
-
     //#region 管理block name
-    block(name: string): BEM;
-    block(): string;
-    block(name?: string): BEM | string {
-        if(!!name) {
-            if(name.startsWith(BEM.namespace)) { // 避免携带了命名空间
-                this.blockName = name;
-            } else {
-                this.blockName = `${BEM.namespace}${name}`;
-            }
-            return this;
-        }
+    block(): string {
         return this.blockName;
     }
     //#endregion
@@ -76,16 +68,16 @@ export default class BEM {
     //#region 管理element name
     element(name: string): BEM;
     element(): string;
-    element(name?: string, modifier: IModifier = {}, states: IClasses = {}, clsname: IClasses = {}): BEM | string {
-        if(!!name) {
-            return new BEM(this.blockName, name).add(modifier).addState(states).addClass(clsname); // 新对象, 与原来的互不相关, 所以也不用去销毁
+    element(name?: string): BEM | string {
+        if(typeof name == 'string') {
+            return new BEM(this.originBlockName, name);
         }
         return this.elementName;
     }
     //#endregion
 
-    // emsc(name, [modifier, states, clsname]) -- 使用under函数的例子
-    // emsc(name, modifier, states, clsname) -- 不适用under函数的例子
+    // emsc(name, ['under', modifier, states, clsname]) -- 使用under函数的例子
+    // emsc(name, modifier, states, clsname) -- 不使用under函数的例子
     // 同时使用俩种模式 - 数组不参与排序
     // emsc(name, modifier, states, clsname, [])
     emsc(name: string, ...args: IModifier[] | IModifier[][]) {
@@ -96,7 +88,7 @@ export default class BEM {
                 bem.under(arg[1], arg[2], arg[3]);
             } else {
                 if(index === 0) {
-                    bem.add(arg);
+                    bem.addModifiers(arg);
                 } else if(index === 1) {
                     bem.addState(arg);
                 } else {
@@ -136,14 +128,15 @@ export default class BEM {
          * 答: 不加的话，多个地方使用同一组件，后面的组件样式就会覆盖前面的样式
          * unique需要放在block name之前
          * 答: 这样子使用{'&--check': xxx}才会生成正确的样式 
-         * eg .bem-0.blockname--check
+         * eg .blockname--check.bem-0
          */
         inlineStyle.put({
-            [`.${unqiue}.${this.block()}`]: css,
+            [`.${this.block()}.${unqiue}`]: css,
         });
         this.addClass(unqiue);
         return this;
     }
+    // 查看目前添加的CSS文本
     get cssText() {
         return inlineStyle.cssText;
     }
@@ -223,15 +216,15 @@ export default class BEM {
      * @param modifiers 
      * @returns {boolean}
      */
-    has(modifiers: string | string[]): boolean {
-        return this.valid(modifiers);
+    hasModifiers(modifiers: string | string[]): boolean {
+        return this.validModifiers(modifiers);
     }
     /**
-     * @description 有效 ; 描述符描述对象全部为true && 真实存在
+     * @description 全部描述符对象有效的情况下，才为true ; 描述符描述对象全部为true && 真实存在
      * @param modifiers 
      * @returns {boolean}
      */
-    valid(modifiers: IModifier): boolean {
+    validModifiers(modifiers: IModifier): boolean {
         return this.handleValidator(modifiers, (bool, item) => bool && this.modifiers.has(item)); // 存在并且找得到
     }
     /**
@@ -239,7 +232,7 @@ export default class BEM {
      * @param modifiers 
      * @returns {boolean}
      */
-    same(modifiers: IModifier): boolean {
+    sameModifiers(modifiers: IModifier): boolean {
         return this.handleValidator(modifiers, (bool, item) => (
             (
                 bool && this.modifiers.has(item) // 存在就要找到
@@ -254,7 +247,7 @@ export default class BEM {
      * @param modifiers 
      * @returns {BEM}
      */
-    add(...modifiers: IModifier[]): BEM {
+    addModifiers(...modifiers: IModifier[]): BEM {
         return this.handleTrueValue(modifiers, (modifier) => {
             this.modifiers.add(modifier);
         });
@@ -265,7 +258,7 @@ export default class BEM {
      * @param modifiers 
      * @returns {BEM}
      */
-    remove(modifiers: IModifier): BEM {
+    removeModifiers(modifiers: IModifier): BEM {
         return this.handleTrueValue(modifiers, (modifier) => {
             this.modifiers.delete(modifier);
         });
@@ -276,7 +269,7 @@ export default class BEM {
      * @param modifiers 描述符
      * @returns {BEM}
      */
-    toggle(modifiers: IModifier): BEM {
+    toggleModifiers(modifiers: IModifier): BEM {
         return this.handleValue(modifiers, (bool, modifier) => {
             this.modifiers.has(modifier) ? this.modifiers.delete(modifier) : this.modifiers.add(modifier);
         });
@@ -398,7 +391,7 @@ export default class BEM {
     // 1. 添加描述符
     // 2. 只有在全部描述符有效的情况下才会添加额外的class和state
     under(modifiers: IModifier, states: IClasses = {}, classes: IClasses = {}) {
-        if(this.add(modifiers).valid(modifiers)) {
+        if(this.addModifiers(modifiers).validModifiers(modifiers)) {
             this.addState(states);
             this.addClass(classes);
         }
