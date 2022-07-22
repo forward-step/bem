@@ -76,17 +76,35 @@ export default class BEM {
     }
     //#endregion
 
+    //#region 快捷使用
     // emsc(name, ['under', modifier, states, clsname]) -- 使用under函数的例子
     // emsc(name, modifier, states, clsname) -- 不使用under函数的例子
     // 同时使用俩种模式 - 数组不参与排序
     // emsc(name, modifier, states, clsname, [])
-    emsc(name: string, ...args: IModifier[] | IModifier[][]) {
+    static UNDER: Symbol = Symbol('under');
+    static COMMON_CSS: Symbol = Symbol('公共的CSS');
+    static CSS: Symbol = Symbol('CSS');
+    emsc(name: string, ...args: IModifier[] | IModifier[][] | any[]) {
         const bem = new BEM(this.block(), name);
         let index = 0;
         args.forEach((arg) => {
-            if(Array.isArray(arg) && arg.length > 1 && arg[0] === 'under') {
-                bem.under(arg[1], arg[2], arg[3]);
-            } else {
+            if(Array.isArray(arg) && arg.length > 0) {
+                switch(arg[0]) {
+                    case BEM.UNDER:
+                        // @ts-ignore
+                        bem.under(...arg.slice(1));
+                        break;
+                    case BEM.COMMON_CSS:
+                        // @ts-ignore
+                        bem.commonCss(...arg.slice(1));
+                        break;
+                    case BEM.CSS:
+                        // @ts-ignore
+                        bem.css(...arg.slice(1));
+                        break;
+                }
+            }
+            else {
                 if(index === 0) {
                     bem.addModifiers(arg);
                 } else if(index === 1) {
@@ -99,6 +117,7 @@ export default class BEM {
         });
         return bem.toString();
     }
+    //#endregion
 
     //#region 管理map
     bind(map: IStyleObject) {
@@ -122,18 +141,20 @@ export default class BEM {
         return this;
     }
     css(css: CSSObject) {
-        const unqiue = this.getUniqueClass();
+        const unique = this.getUniqueClass();
         /**
          * 为什么要追加unique
          * 答: 不加的话，多个地方使用同一组件，后面的组件样式就会覆盖前面的样式
          * unique需要放在block name之前
          * 答: 这样子使用{'&--check': xxx}才会生成正确的样式 
          * eg .blockname--check.bem-0
+         * unique必须在blockName前面
+         * 答: 因为后面会拼接为.unique.block--m，所以block必须保持在最后面
          */
         inlineStyle.put({
-            [`.${this.block()}.${unqiue}`]: css,
+            [`.${unique}.${this.block()}`]: css,
         });
-        this.addClass(unqiue);
+        this.addClass(unique);
         return this;
     }
     // 查看目前添加的CSS文本

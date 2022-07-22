@@ -1,8 +1,6 @@
 <template>
     <!-- 矩形，隐藏border-right和boder-top之后再稍微旋转一下就是✔ -->
-    <div :class="clsname" :style="{
-        background: bg,
-    }"></div>
+    <div :class="clsname"></div>
     <div>clsname:</div>
     <code>{{clsname}}</code>
     <div>cssText:</div>
@@ -23,28 +21,52 @@ export default defineComponent({
     },
     setup(props) {
         let bem = new BEM(`el-check`);
-        const clsname = computed<string>(() =>
-            bem
-                .destory()
-                .add({
-                    circle: props.circle,
-                })
-                // css in js
-                .css({
-                    'background-color': props.bg,
-                    '&--circle': {
-                        border: `1px solid ${props.color}`,
-                    },
-                    '&::before': {
-                        'border-color': props.color,
-                    },
-                    // 测试媒体查询
-                    '@media only screen and (max-width: 600px)': {
-                        'background-color': 'red',
-                    },
-                })
-                .toString()
-        );
+        // const clsname = computed<string>(() =>
+        //     bem
+        //         .destory()
+        //         .addModifiers({
+        //             circle: props.circle,
+        //         })
+        //         // css in js
+        //         .css({
+        //             'background-color': props.bg,
+        //             '&--circle': {
+        //                 border: `1px solid ${props.color}`,
+        //             },
+        //             '&::before': {
+        //                 'border-color': props.color,
+        //             },
+        //         })
+        //         .commonCss({
+        //             '@media only screen and (max-width: 600px)': {
+        //                 'background-color': 'red !important',
+        //             },
+        //         })
+        //         .toString()
+        // );
+
+        // 缺点: 每次emsc都要新增一个style
+        const clsname = computed<string>(() => bem.emsc('', {
+            circle: props.circle,
+        }, [
+            BEM.CSS,
+            {
+                'background-color': props.bg,
+                '&--circle': {
+                    border: `1px solid ${props.color}`,
+                },
+                '&::before': {
+                    'border-color': props.color,
+                },
+            }
+        ], [
+            BEM.COMMON_CSS,
+            {
+                '@media only screen and (max-width: 600px)': {
+                    'background-color': 'red !important',
+                },
+            }
+        ]))
         const cssText = computed(() => bem.cssText);
         return {
             clsname,

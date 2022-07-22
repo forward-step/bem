@@ -45,32 +45,68 @@ export default defineComponent({
         //     if(!window.bems) window.bems = [];
         //     window.bems.push(bem);
         // }
+        // const clsname = computed<string>(() =>
+        //     bem
+        //         .destory() // 必须销毁
+        //         .addState({
+        //             'disabled': props.disabled,
+        //             'focus': focus.value,
+        //             'checked': model.value === props.value,
+        //         })
+        //         .under({
+        //             'border': props.border,
+        //         }, {
+        //             'dashed': props.dashed,
+        //             'cap': props.cap,
+        //             'large': props.size === 'large',
+        //             'medium': props.size === 'medium',
+        //             'small': props.size === 'small',
+        //         })
+        //         .under({
+        //             'fill': props.fill,
+        //         }, {
+        //             'cap': props.cap,
+        //             'large': props.size === 'large',
+        //             'medium': props.size === 'medium',
+        //             'small': props.size === 'small',
+        //         })
+        //         .toString()
+        // );
         const clsname = computed<string>(() =>
-            bem
-                .destory() // 必须销毁
-                .addState({
-                    'disabled': props.disabled,
-                    'focus': focus.value,
-                    'checked': model.value === props.value,
-                })
-                .under({
-                    'border': props.border,
-                }, {
-                    'dashed': props.dashed,
-                    'cap': props.cap,
-                    'large': props.size === 'large',
-                    'medium': props.size === 'medium',
-                    'small': props.size === 'small',
-                })
-                .under({
-                    'fill': props.fill,
-                }, {
-                    'cap': props.cap,
-                    'large': props.size === 'large',
-                    'medium': props.size === 'medium',
-                    'small': props.size === 'small',
-                })
-                .toString()
+            bem.emsc(
+                '',
+                {},
+                {
+                    disabled: props.disabled,
+                    focus: focus.value,
+                    checked: model.value === props.value,
+                },
+                [
+                    BEM.UNDER,
+                    {
+                        border: props.border,
+                    },
+                    {
+                        dashed: props.dashed,
+                        cap: props.cap,
+                        large: props.size === 'large',
+                        medium: props.size === 'medium',
+                        small: props.size === 'small',
+                    },
+                ],
+                [
+                    BEM.UNDER,
+                    {
+                        fill: props.fill,
+                    },
+                    {
+                        cap: props.cap,
+                        large: props.size === 'large',
+                        medium: props.size === 'medium',
+                        small: props.size === 'small',
+                    },
+                ]
+            )
         );
         return {
             clsname, focus, radio, model,
